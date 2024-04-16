@@ -1,0 +1,122 @@
+﻿unit view.principal;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Menus,
+  System.ImageList, Vcl.ImgList, CommCtrl, StrUtils, Vcl.Buttons, Vcl.DBCtrls,
+  Vcl.Imaging.pngimage, System.Math, System.Types, Vcl.Imaging.jpeg, CadastroInterface,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
+  FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
+  FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet,
+  FireDAC.Comp.Client;
+
+type
+  TFormPrincipal = class(TForm, ICadastroView)
+    PageControlAbas: TPageControl;
+    Menu: TMainMenu;
+    mnCadastro: TMenuItem;
+    mnManutencao: TMenuItem;
+    Sair2: TMenuItem;
+    mnProdutos: TMenuItem;
+    mnEstoque: TMenuItem;
+    AcessoRapidoPanel: TPanel;
+    AcessoRapidoLabel: TLabel;
+    FlowPanel: TFlowPanel;
+    spTanquesEBombas: TSpeedButton;
+    spEstoque: TSpeedButton;
+    AgendamentosPanel: TPanel;
+    BottomPanel: TPanel;
+    imgLogo: TImage;
+    InformacoesSistemaPanel: TPanel;
+    Bevel1: TBevel;
+    UsuarioPanel: TPanel;
+    ImageList: TImageList;
+    procedure Sair2Click(Sender: TObject);
+    procedure spTanquesEBombasClick(Sender: TObject);
+    procedure spEstoqueClick(Sender: TObject);
+  private
+  public
+  end;
+
+var
+  FormPrincipal: TFormPrincipal;
+
+implementation
+
+{$R *.dfm}
+
+uses view.cadastro.bombas, view.movimentacao.estoque, repository.movimentacao.estoque,
+     repository.bombas, Presenter.cadastro, data.conexao, view.messages;
+
+procedure TFormPrincipal.Sair2Click(Sender: TObject);
+begin
+   Close;
+end;
+
+procedure TFormPrincipal.spEstoqueClick(Sender: TObject);
+var
+  MovimentacaoEstoqueRepository: TMovimentacaoEstoqueRepository;
+  Presenter : TCadastroPresenter;
+  Query: TFDQuery;
+begin
+  try
+    if not Assigned(FormMovimentacaoEstoque) then
+    begin
+      MovimentacaoEstoqueRepository := TMovimentacaoEstoqueRepository.Create(TConexao.GetInstancia.Conexao);
+      Query := TFDQuery.Create(nil);
+      Query.Connection := MovimentacaoEstoqueRepository.GetAll.Connection;
+      Query.SQL.Text := MovimentacaoEstoqueRepository.GetAll.SQL.Text;
+      Query.Open;
+      Query.BeforePost := FormMovimentacaoEstoque.FDQueryBeforePost;
+      Presenter := TCadastroPresenter.Create(Self, Query);
+      FormMovimentacaoEstoque := TFormMovimentacaoEstoque.Create(Application, Presenter, Query);
+      try
+        FormMovimentacaoEstoque.ShowModal;
+      finally
+        FreeAndNil(FormMovimentacaoEstoque);
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      TMessage.ShowMessage('Aviso', 'Ocorreu um erro ao abrir a tela de produtos:' + E.Message, tmAttention);
+    end;
+  end;
+end;
+
+procedure TFormPrincipal.spTanquesEBombasClick(Sender: TObject);
+var
+  BombasRepository: TBombasRepository;
+  Presenter : TCadastroPresenter;
+  Query: TFDQuery;
+begin
+  try
+    if not Assigned(FormBombas) then
+    begin
+      BombasRepository := TBombasRepository.Create(TConexao.GetInstancia.Conexao);
+      Query := TFDQuery.Create(nil);
+      Query.Connection := BombasRepository.GetAll.Connection;
+      Query.SQL.Text := BombasRepository.GetAll.SQL.Text;
+      Query.Open;
+      Query.BeforePost := FormBombas.FDQueryBeforePost;
+      Presenter := TCadastroPresenter.Create(Self, Query);
+      FormBombas := TFormBombas.Create(Application, Presenter, Query);
+      try
+        FormBombas.ShowModal;
+      finally
+        FreeAndNil(Query);
+        FreeAndNil(FormBombas);
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      TMessage.ShowMessage('Aviso', 'Ocorreu um erro ao abrir a tela de tanques:' + E.Message, tmAttention);
+    end;
+  end;
+end;
+
+end.
+

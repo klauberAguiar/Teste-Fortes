@@ -1,0 +1,35 @@
+unit repository.tanques;
+
+interface
+
+uses
+  FireDAC.Comp.Client, Data.DB;
+
+type
+  TTanquesRepository = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    function GetAll: TFDQuery;
+  end;
+
+implementation
+
+constructor TTanquesRepository.Create(AConnection: TFDConnection);
+begin
+  FConnection := AConnection;
+end;
+
+function TTanquesRepository.GetAll: TFDQuery;
+begin
+  Result := TFDQuery.Create(nil);
+  Result.Connection := FConnection;
+  Result.SQL.Add('SELECT t.Id as TanqueId, t.TipoCombustivel, b.Id as BombaId ');
+  Result.SQL.Add('FROM Tanques t ');
+  Result.SQL.Add('LEFT JOIN Bombas b ON b.IdTanque = t.Id ');
+  Result.SQL.Add('ORDER BY t.Id, b.Id');
+  Result.Open;
+end;
+end.
+

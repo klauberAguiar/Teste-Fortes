@@ -1,0 +1,287 @@
+unit view.cadastro.bombas;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, view.cadastro, Data.DB, Vcl.Grids,
+  Vcl.DBGrids, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, CadastroInterface, Presenter.cadastro,
+  FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
+  FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
+  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
+  FireDAC.UI.Intf, FireDAC.Stan.Def,
+  FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.FB, FireDAC.Phys.FBDef,
+  FireDAC.VCLUI.Wait, Vcl.Mask, Vcl.DBCtrls, frxClass,
+  frxDBSet, FireDAC.Phys.IBWrapper;
+
+type
+  TFormBombas = class(TFormCadastro, ICadastroView)
+    Label5: TLabel;
+    DBEdit5: TDBEdit;
+    cmbTanque: TComboBox;
+    Label6: TLabel;
+    dbID: TDBEdit;
+    Label1: TLabel;
+    dsRel: TfrxDBDataset;
+    frxrelatorio: TfrxReport;
+    btnRelatorio: TButton;
+    cmbBomba: TComboBox;
+    Label3: TLabel;
+    procedure btnNovoClick(Sender: TObject);
+    procedure btnEditarClick(Sender: TObject);
+    procedure btnExcluirClick(Sender: TObject);
+    procedure btnCancelarClick(Sender: TObject);
+    procedure btnSalvarClick(Sender: TObject);
+    procedure cmbTanqueChange(Sender: TObject);
+    function ConfirmDeletion: Boolean;
+    procedure FDQueryBeforePost(DataSet: TDataSet);
+    procedure btnRelatorioClick(Sender: TObject);
+    procedure cmbBombaChange(Sender: TObject);
+  private
+    { Private declarations }
+    FQuery: TFDQuery;
+    FPresenter: TCadastroPresenter;
+    procedure PreencherTanques;
+    procedure SetaComboTanques;
+    procedure HabilitarAbaConsulta;
+    procedure HabilitarAbaCadastro;
+    procedure PreencherBombas;
+    procedure SetaComboBombas;
+
+
+  public
+    { Public declarations }
+    function GetDataSetProdutos: TFDQuery;
+    constructor Create(AOwner: TComponent; APresenter: TCadastroPresenter; AQuery: TFDQuery);
+  end;
+
+var
+  FormBombas: TFormBombas;
+
+implementation
+
+uses  repository.bombas, repository.tanques, data.conexao, view.messages;
+
+{$R *.dfm}
+
+{ TFormCadastro1 }
+
+constructor TFormBombas.Create(AOwner: TComponent;  APresenter:TCadastroPresenter; AQuery: TFDQuery);
+begin
+  inherited Create(AOwner);
+  FPresenter :=  APresenter;
+  FQuery := AQuery;
+  try
+    DataSource.DataSet := AQuery;
+    DBGrid1.DataSource := DataSource;
+    PreencherTanques;
+    SetaComboTanques;
+    PreencherBombas;
+    SetaComboBombas;
+  except
+    FQuery.Free;
+    raise;
+  end;
+end;
+
+procedure TFormBombas.btnCancelarClick(Sender: TObject);
+begin
+  inherited;
+  FPresenter.CancelEdit;
+  HabilitarAbaConsulta;
+end;
+
+procedure TFormBombas.HabilitarAbaCadastro;
+begin
+  PageControl1.ActivePageIndex := 1;
+end;
+
+procedure TFormBombas.btnEditarClick(Sender: TObject);
+begin
+  inherited;
+  FPresenter.EditRecord;
+  SetaComboTanques;
+  SetaComboBombas;
+  HabilitarAbaCadastro;
+end;
+
+procedure TFormBombas.btnExcluirClick(Sender: TObject);
+begin
+  inherited;
+  if ConfirmDeletion then
+  begin
+    try
+      TConexao.GetInstancia.Conexao.StartTransaction;
+      FPresenter.DeleteRecord;
+      TConexao.GetInstancia.Conexao.Commit;
+    except
+      on E: Exception do
+      begin
+        TConexao.GetInstancia.Conexao.Rollback;
+        TMessage.ShowMessage('Erro', 'Não é possível excluir: ' + E.Message, tmAttention);
+      end;
+    end;
+  end;
+end;
+
+
+procedure TFormBombas.btnNovoClick(Sender: TObject);
+begin
+  inherited;
+  FPresenter.AddNewRecord;
+  FQuery.FieldByName('TipoCombustivel').Required := False;
+  FQuery.FieldByName('BombaId').Required := False;
+  SetaComboTanques;
+  SetaComboBombas;
+  HabilitarAbaCadastro;
+end;
+
+procedure TFormBombas.btnRelatorioClick(Sender: TObject);
+begin
+  inherited;
+  frxrelatorio.ShowReport;
+end;
+
+procedure TFormBombas.HabilitarAbaConsulta;
+begin
+  PageControl1.ActivePageIndex := 0;
+  DataSource.DataSet.Refresh;
+end;
+
+function TFormBombas.GetDataSetProdutos: TFDQuery;
+begin
+  Result := FQuery;
+end;
+
+procedure TFormBombas.btnSalvarClick(Sender: TObject);
+begin
+  try
+    inherited;
+    TConexao.GetInstancia.Conexao.StartTransaction;
+    FPresenter.SaveRecord;
+    TConexao.GetInstancia.Conexao.Commit;
+  except
+    on E: EIBNativeException do
+    begin
+      if E.ErrorCode = 335544665 then
+      begin
+        TConexao.GetInstancia.Conexao.Rollback;
+        ShowMessage('Não é possível inserir registros duplicados para o mesmo tanque e bomba.');
+      end
+      else
+        raise;
+    end;
+  end;
+end;
+
+procedure TFormBombas.cmbBombaChange(Sender: TObject);
+begin
+  inherited;
+  if not FQuery.IsEmpty then
+  begin
+    FQuery.Edit;
+    dbID.EditText :=  (Integer(cmbBomba.Items.Objects[cmbBomba.ItemIndex])).ToString;
+  end;
+end;
+
+procedure TFormBombas.cmbTanqueChange(Sender: TObject);
+begin
+  inherited;
+  if not FQuery.IsEmpty then
+  begin
+    FQuery.Edit;
+    DBEdit5.EditText :=  (Integer(cmbTanque.Items.Objects[cmbTanque.ItemIndex])).ToString;
+  end;
+end;
+
+function TFormBombas.ConfirmDeletion: Boolean;
+begin
+  Result := TMessage.ShowMessage('Confirmação', 'Confirma a exclusão?', tmInterrogation) = mrYes;
+end;
+
+procedure TFormBombas.PreencherTanques;
+var
+  TanquesRepository: TTanquesRepository;
+  Query: TFDQuery;
+begin
+  TanquesRepository := TTanquesRepository.Create(TConexao.GetInstancia.Conexao);
+  Query := TanquesRepository.GetAll;
+  try
+    cmbTanque.Clear;
+    while not Query.Eof do
+    begin
+      cmbTanque.Items.AddObject(Query.FieldByName('id').AsString + ' - ' +
+      Query.FieldByName('tipocombustivel').AsString, TObject(Query.FieldByName('id').AsInteger));
+      Query.Next;
+    end;
+  finally
+    Query.Free;
+    TanquesRepository.Free;
+  end;
+end;
+
+procedure TFormBombas.PreencherBombas;
+var
+  BombasRepository: TBombasRepository;
+  Query: TFDQuery;
+begin
+  BombasRepository := TBombasRepository.Create(TConexao.GetInstancia.Conexao);
+  Query := BombasRepository.GetDistinctAll;
+  try
+    cmbBomba.Clear;
+    while not Query.Eof do
+    begin
+      cmbBomba.Items.AddObject('Bomba: ' + Query.FieldByName('Bombaid').AsString, TObject(Query.FieldByName('Bombaid').AsInteger));
+      Query.Next;
+    end;
+  finally
+    Query.Free;
+    BombasRepository.Free;
+  end;
+end;
+
+procedure TFormBombas.SetaComboBombas;
+var
+  IdBomba: Integer;
+begin
+  IdBomba := DataSource.DataSet.FieldByName('Bombaid').AsInteger;
+  cmbBomba.ItemIndex := cmbBomba.Items.IndexOfObject(TObject(IdBomba));
+end;
+
+
+procedure TFormBombas.SetaComboTanques;
+var
+  IdTanque: Integer;
+begin
+  IdTanque := DataSource.DataSet.FieldByName('IdTanque').AsInteger;
+  cmbTanque.ItemIndex := cmbTanque.Items.IndexOfObject(TObject(IdTanque));
+end;
+
+procedure TFormBombas.FDQueryBeforePost(DataSet: TDataSet);
+begin
+  inherited;
+ { if Trim(DataSet.FieldByName('NOME').AsString) = '' then
+  begin
+    TMessage.ShowMessage('Aviso', 'O campo Nome é obrigatório.', tmAttention);
+    Abort;
+  end;
+
+  if DataSet.FieldByName('PRECO').AsCurrency <= 0 then
+  begin
+    TMessage.ShowMessage('Aviso', 'O campo Preço deve ser maior que zero.', tmAttention);
+    Abort;
+  end;
+
+  if DataSet.FieldByName('QUANTIDADEEMESTOQUE').AsInteger < 0 then
+  begin
+    TMessage.ShowMessage('Aviso', 'O campo Quantidade em Estoque não pode ser negativo.' , tmAttention);
+    Abort;
+  end;
+
+  if DataSet.FieldByName('CATEGORIAID').IsNull then
+  begin
+    TMessage.ShowMessage('Aviso', 'A seleção de uma Categoria é obrigatória.', tmAttention);
+    Abort;
+  end; }
+end;
+end.

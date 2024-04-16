@@ -1,0 +1,33 @@
+unit repository.bombas;
+
+interface
+
+uses
+  FireDAC.Comp.Client, Data.DB;
+
+type
+  TBombasRepository = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    function GetAll: TFDQuery;
+  end;
+
+implementation
+
+constructor TBombasRepository.Create(AConnection: TFDConnection);
+begin
+  FConnection := AConnection;
+end;
+
+function TBombasRepository.GetAll: TFDQuery;
+begin
+  Result := TFDQuery.Create(nil);
+  Result.Connection := FConnection;
+  Result.SQL.Text := 'SELECT * FROM BOMBAS';
+  Result.Open;
+end;
+
+end.
+

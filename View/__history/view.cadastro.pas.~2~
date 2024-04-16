@@ -1,0 +1,99 @@
+unit view.cadastro;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Data.DB,
+  Vcl.Grids, Vcl.DBGrids, Vcl.StdCtrls;
+
+type
+  TFormCadastro = class(TForm)
+    pnlBotoes: TPanel;
+    PageControl1: TPageControl;
+    tsConsulta: TTabSheet;
+    tsCadastro: TTabSheet;
+    btnNovo: TButton;
+    btnEditar: TButton;
+    btnExcluir: TButton;
+    btnCancelar: TButton;
+    DBGrid1: TDBGrid;
+    DataSource: TDataSource;
+    btnSalvar: TButton;
+    procedure btnExcluirClick(Sender: TObject); virtual;
+    procedure btnCancelarClick(Sender: TObject); virtual;
+    procedure btnSalvarClick(Sender: TObject); virtual;
+    procedure btnNovoClick(Sender: TObject); virtual;
+    procedure btnEditarClick(Sender: TObject);virtual;
+    procedure DataSourceDataChange(Sender: TObject; Field: TField);
+
+  private
+    { Private declarations }
+    procedure UpdateButtonState;
+    procedure HabilitarAbaCadastro;
+    procedure HabilitarAbaConsulta;
+  public
+    { Public declarations }
+  end;
+
+var
+  FormCadastro: TFormCadastro;
+
+implementation
+
+{$R *.dfm}
+
+{ TFormCadastro }
+
+procedure TFormCadastro.btnCancelarClick(Sender: TObject);
+begin
+  HabilitarAbaConsulta
+end;
+
+procedure TFormCadastro.btnEditarClick(Sender: TObject);
+begin
+  HabilitarAbaCadastro
+end;
+
+procedure TFormCadastro.btnExcluirClick(Sender: TObject);
+begin
+  HabilitarAbaConsulta
+end;
+
+procedure TFormCadastro.btnNovoClick(Sender: TObject);
+begin
+  HabilitarAbaCadastro
+end;
+
+procedure TFormCadastro.btnSalvarClick(Sender: TObject);
+begin
+  HabilitarAbaConsulta
+end;
+
+procedure TFormCadastro.DataSourceDataChange(Sender: TObject; Field: TField);
+begin
+  UpdateButtonState
+end;
+
+procedure TFormCadastro.HabilitarAbaConsulta;
+begin
+  PageControl1.ActivePageIndex := 0;
+  DataSource.DataSet.Refresh;
+end;
+
+procedure TFormCadastro.HabilitarAbaCadastro;
+begin
+  PageControl1.ActivePageIndex := 1;
+end;
+
+
+procedure TFormCadastro.UpdateButtonState;
+begin
+  btnNovo.Enabled := DataSource.DataSet.State in [dsBrowse, dsInactive];
+  btnEditar.Enabled := (DataSource.DataSet.State in [dsBrowse, dsInactive]) and (not DataSource.DataSet.IsEmpty);
+  btnExcluir.Enabled := (DataSource.DataSet.State in [dsBrowse, dsInactive]) and (not DataSource.DataSet.IsEmpty);
+  btnCancelar.Enabled := DataSource.DataSet.State in [dsEdit, dsInsert];
+  btnSalvar.Enabled := DataSource.DataSet.State in [dsEdit, dsInsert];
+end;
+end.
+

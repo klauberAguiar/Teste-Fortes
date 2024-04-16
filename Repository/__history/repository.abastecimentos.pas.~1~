@@ -1,0 +1,81 @@
+unit repository.abastecimentos;
+
+interface
+
+uses
+  FireDAC.Comp.Client, System.SysUtils, FireDAC.Stan.Param;
+
+type
+  TAbastecimentosRepository = class
+  private
+    FConnection: TFDConnection;
+  public
+    constructor Create(AConnection: TFDConnection);
+    function GetAll: TFDQuery;
+    function Insert(AIDBomba, AIDTanque: Integer; AData: TDate;
+                    ALitros, AValor, AValorImposto: Double): Boolean;
+    function CheckCombinationExists(AIDBomba, AIDTanque: Integer): Boolean;
+    // Adicione outros métodos conforme necessário
+  end;
+
+implementation
+
+{ TAbastecimentosRepository }
+
+constructor TAbastecimentosRepository.Create(AConnection: TFDConnection);
+begin
+  Assert(Assigned(AConnection), 'A conexão com o banco de dados não foi atribuída.');
+  FConnection := AConnection;
+end;
+
+function TAbastecimentosRepository.GetAll: TFDQuery;
+begin
+  Result := TFDQuery.Create(nil);
+  Result.Connection := FConnection;
+  Result.SQL.Text := 'SELECT * FROM ABASTECIMENTOS ORDER BY DATA DESC';
+  Result.Open;
+end;
+
+function TAbastecimentosRepository.Insert(AIDBomba, AIDTanque: Integer;
+                                           AData: TDate; ALitros, AValor, AValorImposto: Double): Boolean;
+var
+  Query: TFDQuery;
+begin
+  Result := False;
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'INSERT INTO ABASTECIMENTOS (IDBOMBA, IDTANQUE, DATA, LITROS, VALOR, VALORIMPOSTO) ' +
+                      'VALUES (:IDBOMBA, :IDTANQUE, :DATA, :LITROS, :VALOR, :VALORIMPOSTO)';
+    Query.ParamByName('IDBOMBA').AsInteger := AIDBomba;
+    Query.ParamByName('IDTANQUE').AsInteger := AIDTanque;
+    Query.ParamByName('DATA').AsDate := AData;
+    Query.ParamByName('LITROS').AsFloat := ALitros;
+    Query.ParamByName('VALOR').AsFloat := AValor;
+    Query.ParamByName('VALORIMPOSTO').AsFloat := AValorImposto;
+    Query.ExecSQL;
+    Result := True;
+  finally
+    Query.Free;
+  end;
+end;
+
+function TAbastecimentosRepository.CheckCombinationExists(AIDBomba, AIDTanque: Integer): Boolean;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := FConnection;
+    Query.SQL.Text := 'SELECT COUNT(*) FROM ABASTECIMENTOS WHERE IDBOMBA = :IDBOMBA AND IDTANQUE = :IDTANQUE';
+    Query.ParamByName('IDBOMBA').AsInteger := AIDBomba;
+    Query.ParamByName('IDTANQUE').AsInteger := AIDTanque;
+    Query.Open;
+    Result := Query.Fields[0].AsInteger > 0;
+  finally
+    Query.Free;
+  end;
+end;
+
+end.
+
