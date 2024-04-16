@@ -43,8 +43,6 @@ type
     RLDBResult2: TRLDBResult;
     RLLabel10: TRLLabel;
     RLDraw4: TRLDraw;
-    RLDBText6: TRLDBText;
-    RLLabel2: TRLLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private

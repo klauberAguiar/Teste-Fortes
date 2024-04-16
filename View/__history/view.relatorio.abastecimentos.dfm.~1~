@@ -58,7 +58,7 @@ object FormRelatorioAbastecimentos: TFormRelatorioAbastecimentos
       Left = 38
       Top = 253
       Width = 718
-      Height = 65
+      Height = 68
       AutoSize = True
       BandType = btFooter
       object RLSystemInfo3: TRLSystemInfo
@@ -171,16 +171,6 @@ object FormRelatorioAbastecimentos: TFormRelatorioAbastecimentos
           DataSource = dsAbastecimento
           Text = ''
         end
-        object RLDBText6: TRLDBText
-          Left = 234
-          Top = 0
-          Width = 53
-          Height = 16
-          Alignment = taRightJustify
-          DataField = 'idtanque'
-          DataSource = dsAbastecimento
-          Text = ''
-        end
       end
       object RLBand1: TRLBand
         Left = 0
@@ -266,7 +256,7 @@ object FormRelatorioAbastecimentos: TFormRelatorioAbastecimentos
           Transparent = False
         end
         object RLLabel6: TRLLabel
-          Left = 303
+          Left = 302
           Top = -1
           Width = 64
           Height = 16
@@ -285,20 +275,6 @@ object FormRelatorioAbastecimentos: TFormRelatorioAbastecimentos
           Width = 70
           Height = 16
           Caption = 'Valor total'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          ParentFont = False
-          Transparent = False
-        end
-        object RLLabel2: TRLLabel
-          Left = 229
-          Top = -1
-          Width = 64
-          Height = 16
-          Caption = 'Id tanque'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -13
