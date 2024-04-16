@@ -34,6 +34,8 @@ object FormPrincipal: tFormPrincipal
     TabHeight = 32
     TabOrder = 0
     TabWidth = 120
+    ExplicitWidth = 932
+    ExplicitHeight = 735
   end
   object AcessoRapidoPanel: TPanel
     Left = 0
@@ -49,6 +51,8 @@ object FormPrincipal: tFormPrincipal
     ParentBackground = False
     TabOrder = 1
     StyleElements = [seFont, seBorder]
+    ExplicitWidth = 932
+    ExplicitHeight = 735
     object AcessoRapidoLabel: TLabel
       Left = 0
       Top = 30
@@ -80,6 +84,7 @@ object FormPrincipal: tFormPrincipal
       Padding.Left = 30
       Padding.Top = 10
       TabOrder = 0
+      ExplicitWidth = 932
       object spTanquesEBombas: TSpeedButton
         AlignWithMargins = True
         Left = 33
@@ -116,6 +121,7 @@ object FormPrincipal: tFormPrincipal
       BevelOuter = bvNone
       Padding.Left = 30
       TabOrder = 1
+      ExplicitTop = 194
     end
     object BottomPanel: TPanel
       Left = 0
@@ -125,6 +131,8 @@ object FormPrincipal: tFormPrincipal
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitTop = 676
+      ExplicitWidth = 932
       object imgLogo: TImage
         Left = 0
         Top = 0
