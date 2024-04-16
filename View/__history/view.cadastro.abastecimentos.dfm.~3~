@@ -10,31 +10,31 @@ inherited FormAbastecimentos: TFormAbastecimentos
     Width = 1116
     ExplicitWidth = 1110
     inherited btnNovo: TButton
-      Left = 441
+      Left = 447
       OnClick = btnNovoClick
-      ExplicitLeft = 435
+      ExplicitLeft = 441
     end
     inherited btnEditar: TButton
-      Left = 567
+      Left = 573
       OnClick = btnEditarClick
-      ExplicitLeft = 561
+      ExplicitLeft = 567
     end
     inherited btnExcluir: TButton
-      Left = 693
-      ExplicitLeft = 687
+      Left = 699
+      ExplicitLeft = 693
     end
     inherited btnCancelar: TButton
-      Left = 819
+      Left = 825
       OnClick = btnCancelarClick
-      ExplicitLeft = 813
+      ExplicitLeft = 819
     end
     inherited btnSalvar: TButton
-      Left = 945
+      Left = 951
       OnClick = btnSalvarClick
-      ExplicitLeft = 939
+      ExplicitLeft = 945
     end
     object btnRelatorio: TButton
-      Left = 3
+      Left = 9
       Top = 16
       Width = 120
       Height = 33
@@ -49,7 +49,7 @@ inherited FormAbastecimentos: TFormAbastecimentos
       TabOrder = 5
       StyleElements = [seClient, seBorder]
       OnClick = btnRelatorioClick
-      ExplicitLeft = -3
+      ExplicitLeft = 3
     end
   end
   inherited PageControl1: TPageControl

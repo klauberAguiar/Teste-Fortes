@@ -29,7 +29,7 @@ type
     procedure btnExcluirClick(Sender: TObject);
     procedure btnSalvarClick(Sender: TObject);
     procedure cmbTanqueChange(Sender: TObject);
-    function ConfirmDeletion: Boolean;
+    function ConfirmaExclusao: Boolean;
     procedure FDQueryBeforePost(DataSet: TDataSet);
     procedure cmbBombaChange(Sender: TObject);
     procedure PageControl1Change(Sender: TObject);
@@ -99,7 +99,7 @@ end;
 procedure TFormBombas.btnExcluirClick(Sender: TObject);
 begin
   inherited;
-  if ConfirmDeletion then
+  if ConfirmaExclusao then
   begin
     try
       TConexao.GetInstancia.Conexao.StartTransaction;
@@ -184,7 +184,7 @@ begin
   end;
 end;
 
-function TFormBombas.ConfirmDeletion: Boolean;
+function TFormBombas.ConfirmaExclusao: Boolean;
 begin
   Result := TMessage.ShowMessage('Confirmação', 'Confirma a exclusão?', tmInterrogation) = mrYes;
 end;

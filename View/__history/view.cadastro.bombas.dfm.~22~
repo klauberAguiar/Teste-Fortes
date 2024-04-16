@@ -4,7 +4,6 @@ inherited FormBombas: TFormBombas
   ClientWidth = 937
   Position = poDesktopCenter
   ExplicitWidth = 949
-  ExplicitHeight = 471
   TextHeight = 15
   inherited pnlBotoes: TPanel
     Width = 937
@@ -24,6 +23,7 @@ inherited FormBombas: TFormBombas
     end
     inherited btnExcluir: TButton
       Left = 524
+      OnClick = btnExcluirClick
       ExplicitLeft = 518
     end
     inherited btnCancelar: TButton
@@ -41,13 +41,10 @@ inherited FormBombas: TFormBombas
     Width = 937
     OnChange = PageControl1Change
     ExplicitWidth = 931
-    ExplicitHeight = 351
     inherited tsConsulta: TTabSheet
       ExplicitWidth = 929
-      ExplicitHeight = 330
       inherited DBGrid1: TDBGrid
         Width = 929
-        Height = 330
         Columns = <
           item
             Expanded = False
@@ -72,7 +69,6 @@ inherited FormBombas: TFormBombas
     end
     inherited tsCadastro: TTabSheet
       ExplicitWidth = 929
-      ExplicitHeight = 330
       object Label5: TLabel
         Left = 10
         Top = 21

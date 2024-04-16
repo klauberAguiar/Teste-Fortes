@@ -46,7 +46,6 @@ type
     procedure dbLitrosChange(Sender: TObject);
     procedure PageControl1Change(Sender: TObject);
     procedure DataChange(Sender: TObject);
-    procedure btnExcluirClick(Sender: TObject);
   private
     { Private declarations }
     FQuery: TFDQuery;
@@ -56,7 +55,6 @@ type
     procedure SetaComboBombas;
     procedure SetaComboTanques;
     procedure CalcularImposto;
-    function ConfirmaExclusao: Boolean;
 
   public
     { Public declarations }
@@ -87,30 +85,6 @@ begin
   SetaComboBombas;
   data.Date := DataSource.DataSet.FieldByName('data').AsDateTime;
   inherited;
-end;
-
-procedure TFormAbastecimentos.btnExcluirClick(Sender: TObject);
-begin
-  if ConfirmaExclusao then
-  begin
-    try
-      TConexao.GetInstancia.Conexao.StartTransaction;
-      FPresenter.DeleteRecord;
-      TConexao.GetInstancia.Conexao.Commit;
-    except
-      on E: Exception do
-      begin
-        TConexao.GetInstancia.Conexao.Rollback;
-        TMessage.ShowMessage('Erro', 'Não é possível excluir.', tmAttention);
-      end;
-    end;
-  end;
-
-end;
-
-function TFormAbastecimentos.ConfirmaExclusao: Boolean;
-begin
-  Result := TMessage.ShowMessage('Confirmação', 'Confirma a exclusão?', tmInterrogation) = mrYes;
 end;
 
 procedure TFormAbastecimentos.btnNovoClick(Sender: TObject);

@@ -12,39 +12,34 @@ uses
   FireDAC.UI.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.FB, FireDAC.Phys.FBDef,
   FireDAC.VCLUI.Wait, Vcl.Mask, Vcl.DBCtrls, frxClass,
-  frxDBSet;
+  frxDBSet, FireDAC.Phys.IBWrapper;
 
 type
   TFormBombas = class(TFormCadastro, ICadastroView)
     Label5: TLabel;
-    DBEdit5: TDBEdit;
+    dbIdTanque: TDBEdit;
     cmbTanque: TComboBox;
     Label6: TLabel;
     dbID: TDBEdit;
     Label1: TLabel;
-    dsRel: TfrxDBDataset;
-    frxrelatorio: TfrxReport;
-    btnRelatorio: TButton;
     cmbBomba: TComboBox;
     Label3: TLabel;
     procedure btnNovoClick(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
     procedure btnExcluirClick(Sender: TObject);
-    procedure btnCancelarClick(Sender: TObject);
     procedure btnSalvarClick(Sender: TObject);
     procedure cmbTanqueChange(Sender: TObject);
     function ConfirmDeletion: Boolean;
     procedure FDQueryBeforePost(DataSet: TDataSet);
-    procedure btnRelatorioClick(Sender: TObject);
     procedure cmbBombaChange(Sender: TObject);
+    procedure PageControl1Change(Sender: TObject);
+    procedure btnCancelarClick(Sender: TObject);
   private
     { Private declarations }
     FQuery: TFDQuery;
     FPresenter: TCadastroPresenter;
     procedure PreencherTanques;
     procedure SetaComboTanques;
-    procedure HabilitarAbaConsulta;
-    procedure HabilitarAbaCadastro;
     procedure PreencherBombas;
     procedure SetaComboBombas;
 
@@ -86,23 +81,19 @@ end;
 
 procedure TFormBombas.btnCancelarClick(Sender: TObject);
 begin
-  inherited;
   FPresenter.CancelEdit;
-  HabilitarAbaConsulta;
-end;
+  SetaComboTanques;
+  SetaComboBombas;
+  inherited;
 
-procedure TFormBombas.HabilitarAbaCadastro;
-begin
-  PageControl1.ActivePageIndex := 1;
 end;
 
 procedure TFormBombas.btnEditarClick(Sender: TObject);
 begin
-  inherited;
   FPresenter.EditRecord;
-  HabilitarAbaCadastro;
   SetaComboTanques;
   SetaComboBombas;
+  inherited;
 end;
 
 procedure TFormBombas.btnExcluirClick(Sender: TObject);
@@ -118,7 +109,7 @@ begin
       on E: Exception do
       begin
         TConexao.GetInstancia.Conexao.Rollback;
-        TMessage.ShowMessage('Erro', 'Não é possível excluir: ' + E.Message, tmAttention);
+        TMessage.ShowMessage('Erro', 'Não é possível excluir. Verifique se essa configuração já foi ultilizada! ', tmAttention);
       end;
     end;
   end;
@@ -127,24 +118,14 @@ end;
 
 procedure TFormBombas.btnNovoClick(Sender: TObject);
 begin
-  inherited;
   FPresenter.AddNewRecord;
   FQuery.FieldByName('TipoCombustivel').Required := False;
   FQuery.FieldByName('BombaId').Required := False;
-  HabilitarAbaCadastro;
-end;
-
-procedure TFormBombas.btnRelatorioClick(Sender: TObject);
-begin
+  SetaComboTanques;
+  SetaComboBombas;
   inherited;
-  frxrelatorio.ShowReport;
 end;
 
-procedure TFormBombas.HabilitarAbaConsulta;
-begin
-  PageControl1.ActivePageIndex := 0;
-  DataSource.DataSet.Refresh;
-end;
 
 function TFormBombas.GetDataSetProdutos: TFDQuery;
 begin
@@ -152,19 +133,34 @@ begin
 end;
 
 procedure TFormBombas.btnSalvarClick(Sender: TObject);
+var
+  BombasRepo: TBombasRepository;
 begin
-  inherited;
-  TConexao.GetInstancia.Conexao.StartTransaction;
   try
+    BombasRepo := TBombasRepository.Create(TConexao.GetInstancia.Conexao);
+    try
+    if ((dbIdTanque.EditText <> '')  and ( dbID.EditText <> '')) and BombasRepo.CheckCombinationExists(dbIdTanque.EditText.ToInteger, dbID.EditText.ToInteger) then
+    begin
+      TMessage.ShowMessage('Aviso', 'Esta combinação de tanque e bomba já está cadastrada.', tmAttention);
+      FPresenter.CancelEdit;
+      Exit;
+    end
+
+  finally
+    BombasRepo.Free;
+  end;
+    TConexao.GetInstancia.Conexao.StartTransaction;
     FPresenter.SaveRecord;
     TConexao.GetInstancia.Conexao.Commit;
-    HabilitarAbaConsulta;
+    inherited;
   except
     on E: Exception do
     begin
       TConexao.GetInstancia.Conexao.Rollback;
-      TMessage.ShowMessage('Erro', 'Erro ao salvar: ' + E.Message, tmAttention);
-    end;
+      TMessage.ShowMessage('Aviso', 'Erro ao salvar os dados.', tmAttention);
+    end
+    else
+      raise;
   end;
 end;
 
@@ -184,7 +180,7 @@ begin
   if not FQuery.IsEmpty then
   begin
     FQuery.Edit;
-    FQuery.FieldByName('idTanque').AsInteger := Integer(cmbTanque.Items.Objects[cmbTanque.ItemIndex]);
+    dbIdTanque.EditText :=  (Integer(cmbTanque.Items.Objects[cmbTanque.ItemIndex])).ToString;
   end;
 end;
 
@@ -212,6 +208,13 @@ begin
     Query.Free;
     TanquesRepository.Free;
   end;
+end;
+
+procedure TFormBombas.PageControl1Change(Sender: TObject);
+begin
+  inherited;
+  SetaComboTanques;
+  SetaComboBombas;
 end;
 
 procedure TFormBombas.PreencherBombas;
@@ -254,28 +257,18 @@ end;
 procedure TFormBombas.FDQueryBeforePost(DataSet: TDataSet);
 begin
   inherited;
- { if Trim(DataSet.FieldByName('NOME').AsString) = '' then
+  if DataSet.FieldByName('BombaId').AsInteger <= 0 then
   begin
-    TMessage.ShowMessage('Aviso', 'O campo Nome é obrigatório.', tmAttention);
+    TMessage.ShowMessage('Aviso', 'Selecione a bomba.', tmAttention);
     Abort;
   end;
 
-  if DataSet.FieldByName('PRECO').AsCurrency <= 0 then
+  if DataSet.FieldByName('IdTanque').AsInteger <= 0 then
   begin
-    TMessage.ShowMessage('Aviso', 'O campo Preço deve ser maior que zero.', tmAttention);
+    TMessage.ShowMessage('Aviso', 'Selecione o tanque.' , tmAttention);
     Abort;
   end;
 
-  if DataSet.FieldByName('QUANTIDADEEMESTOQUE').AsInteger < 0 then
-  begin
-    TMessage.ShowMessage('Aviso', 'O campo Quantidade em Estoque não pode ser negativo.' , tmAttention);
-    Abort;
-  end;
 
-  if DataSet.FieldByName('CATEGORIAID').IsNull then
-  begin
-    TMessage.ShowMessage('Aviso', 'A seleção de uma Categoria é obrigatória.', tmAttention);
-    Abort;
-  end; }
 end;
 end.
